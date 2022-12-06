@@ -33,9 +33,6 @@ fn main() -> Result<(), Box<dyn Error>> {
             .expect("Request device")
     });
 
-    // Create staging belt
-    let mut staging_belt = wgpu::util::StagingBelt::new(1024);
-
     // Prepare swap chain
     let render_format = wgpu::TextureFormat::Bgra8UnormSrgb;
     let mut size = window.inner_size();
@@ -48,7 +45,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             width: size.width,
             height: size.height,
             present_mode: wgpu::PresentMode::AutoVsync,
-            alpha_mode: CompositeAlphaMode::Auto
+            alpha_mode: CompositeAlphaMode::Auto,
         },
     );
 
@@ -83,7 +80,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                         width: size.width,
                         height: size.height,
                         present_mode: wgpu::PresentMode::AutoVsync,
-                        alpha_mode: CompositeAlphaMode::Auto
+                        alpha_mode: CompositeAlphaMode::Auto,
                     },
                 );
             }
@@ -151,7 +148,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 glyph_brush
                     .draw_queued(
                         &device,
-                        &mut staging_belt,
+                        &queue,
                         &mut encoder,
                         view,
                         size.width,
@@ -160,11 +157,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                     .expect("Draw queued");
 
                 // Submit the work!
-                staging_belt.finish();
                 queue.submit(Some(encoder.finish()));
                 frame.present();
-                // Recall unused staging buffers
-                staging_belt.recall();
             }
             _ => {
                 *control_flow = winit::event_loop::ControlFlow::Wait;

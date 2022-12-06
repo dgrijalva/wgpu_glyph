@@ -35,9 +35,6 @@ fn main() -> Result<(), Box<dyn Error>> {
             .expect("Request device")
     });
 
-    // Create staging belt
-    let mut staging_belt = wgpu::util::StagingBelt::new(1024);
-
     // Prepare swap chain and depth buffer
     let mut size = window.inner_size();
     let mut new_size = None;
@@ -155,7 +152,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 glyph_brush
                     .draw_queued(
                         &device,
-                        &mut staging_belt,
+                        &queue,
                         &mut encoder,
                         view,
                         wgpu::RenderPassDepthStencilAttachment {
@@ -175,11 +172,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                     .expect("Draw queued");
 
                 // Submit the work!
-                staging_belt.finish();
                 queue.submit(Some(encoder.finish()));
                 frame.present();
-                // Recall unused staging buffers
-                staging_belt.recall();
             }
             _ => {
                 *control_flow = winit::event_loop::ControlFlow::Wait;
